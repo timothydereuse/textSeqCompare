@@ -18,10 +18,10 @@ mismatch = -5
 gap_open = -5
 gap_extend = -5
 
-gap_open_x = -7
-gap_extend_x = -3
+gap_open_x = -8
+gap_extend_x = -2
 gap_open_y = -5
-gap_extend_y = -5
+gap_extend_y = -4
 
 # display length
 line_len = 90
