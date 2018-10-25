@@ -1,4 +1,5 @@
 import numpy as np
+from unidecode import unidecode
 import matplotlib.pyplot as plt
 
 def read_file(fname):
@@ -7,6 +8,7 @@ def read_file(fname):
     file.close()
     lines = ' '.join(lines)
     lines = lines.replace('\n', '')
+    lines = unidecode(lines)
     return lines
 
 
@@ -17,18 +19,22 @@ gap_open = -3
 gap_extend = -3
 
 gap_open_x = -10
-gap_extend_x = -5
-gap_open_y = -5
-gap_extend_y = -2
+gap_extend_x = -2
+gap_open_y = -10
+gap_extend_y = -10
 
 # display length
 line_len = 90
 
-if __name__ == '__main__':
-    files = ['einsiedeln_001r', 'einsiedeln_001v', 'einsiedeln_002r',
-        'einsiedeln_002v', 'einsiedeln_003r', 'einsiedeln_003v']
+# files
+files = ['einsiedeln_001r', 'einsiedeln_001v', 'einsiedeln_002r',
+    'einsiedeln_002v', 'einsiedeln_003r', 'einsiedeln_003v',
+    'salzinnes_15', 'salzinnes_17', 'stgall390_25',
+    'stmaurf_49r']
 
-    item = files[5]
+
+def process(item):
+    print('processing ' + item + '...')
     transcript = read_file('./txt/' + item + '_transcript.txt')
     ocr = read_file('./txt/' + item + '_ocr.txt')
 
@@ -117,6 +123,9 @@ if __name__ == '__main__':
     ocr_align = ocr_align[::-1]
     align_record = align_record[::-1]
 
+    file = open('./results/' + item + '_result.txt','w+')
+    file.seek(0)
+    file.truncate()
     for n in range(int(np.ceil(len(tra_align) / line_len))):
         start = n * line_len
         end = (n + 1) * line_len
@@ -124,6 +133,16 @@ if __name__ == '__main__':
         print(ocr_align[start:end])
         print(align_record[start:end] + '\n')
 
+        file.write(tra_align[start:end] + '\n')
+        file.write(ocr_align[start:end] + '\n')
+        file.write(align_record[start:end] + '\n\n')
+    file.close()
+
     # plt.imshow(x_mat_ptr[1:200, 1:200])
     # plt.colorbar()
     # plt.show()
+
+
+if __name__ == '__main__':
+    for f in files:
+        process(f)
