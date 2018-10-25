@@ -15,13 +15,13 @@ def read_file(fname):
 # scoring system
 match = 5
 mismatch = -5
-gap_open = -3
-gap_extend = -3
+gap_open = -5
+gap_extend = -5
 
-gap_open_x = -10
-gap_extend_x = -2
-gap_open_y = -10
-gap_extend_y = -10
+gap_open_x = -7
+gap_extend_x = -3
+gap_open_y = -5
+gap_extend_y = -5
 
 # display length
 line_len = 90
@@ -144,5 +144,6 @@ def process(item):
 
 
 if __name__ == '__main__':
+    #process('salzinnes_15')
     for f in files:
-        process(f)
+         process(f)
