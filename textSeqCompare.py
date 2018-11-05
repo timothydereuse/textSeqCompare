@@ -13,15 +13,15 @@ def read_file(fname):
 
 
 # scoring system
-match = 5
-mismatch = -5
-gap_open = -5
-gap_extend = -5
+match = 4
+mismatch = -4
+gap_open = -4
+gap_extend = -4
 
-gap_open_x = -8
-gap_extend_x = -2
+gap_open_x = -10
+gap_extend_x = -10
 gap_open_y = -5
-gap_extend_y = -4
+gap_extend_y = -1
 
 # display length
 line_len = 90
@@ -38,6 +38,9 @@ def process(item):
     transcript = read_file('./txt/' + item + '_transcript.txt')
     ocr = read_file('./txt/' + item + '_ocr.txt')
 
+    # transcript = 'dasd'
+    # ocr = 'dfasd'
+
     # y_mat and x_mat keep track of gaps in horizontal and vertical directions
     mat = np.zeros((len(transcript), len(ocr)))
     y_mat = np.zeros((len(transcript), len(ocr)))
@@ -48,12 +51,12 @@ def process(item):
 
     for i in range(len(transcript)):
         mat[i][0] = gap_extend * i
+        x_mat[i][0] = -100000
         y_mat[i][0] = gap_extend * i
-        x_mat[i][0] = -1000000
     for j in range(len(ocr)):
         mat[0][j] = gap_extend * j
-        x_mat[0][j] = gap_extend * i
-        y_mat[0][j] = -1000000
+        x_mat[0][j] = gap_extend * j
+        y_mat[0][j] = -100000
 
     for i in range(1, len(transcript)):
         for j in range(1, len(ocr)):
@@ -78,7 +81,7 @@ def process(item):
                         y_mat[i-1][j] + gap_open_x + gap_extend_x]
 
             x_mat[i][j] = max(x_mat_vals)
-            x_mat_ptr[i][j] = x_mat_vals.index(max(x_mat_vals))
+            x_mat_ptr[i][j] = int(x_mat_vals.index(max(x_mat_vals)))
 
     # asymetric indel?
 
@@ -86,44 +89,71 @@ def process(item):
     # current matrix we're in tells us which direction to head back (diagonally, y, or x)
     # value of pointer matrix tells us which matrix to go to (mat, y_mat, or x_mat)
     # mat of 0 = match, 1 = x gap, 2 = y gap
+    #
+    # first
     tra_align = ''
     ocr_align = ''
     align_record = ''
+    pt_record = ''
     xpt = len(transcript) - 1
     ypt = len(ocr) - 1
-    mpt = 0
+    mpt = mat_ptr[xpt][ypt]
+    prev_pt = -1
 
+    # these two lines correct an off-by-one error somewhere in my code. i can't find it.
+    # honestly, i'm absolutely furious that this works, but i've spent too much time chasing
+    # down the original bug already. the * is a dummy character.
+    # transcript = '*' + transcript
+    # ocr = '*' + ocr
+
+    # start at bottom-right corner and work way up to top-left
     while(xpt >= 0 and ypt >= 0):
+
+        pt_record += str(int(mpt))
+
+        # case if the current cell is reachable from the diagonal
         if mpt == 0:
-            tra_align += transcript[xpt]
-            ocr_align += ocr[ypt]
-            align_record += 'O' if(transcript[xpt] == ocr[ypt]) else 'X'
+            tra_align += transcript[xpt - 1]
+            ocr_align += ocr[ypt - 1]
+            added_text = transcript[xpt] + ' ' + ocr[ypt]
+            print(mpt, xpt, ypt, added_text)
+
+            align_record += 'O' if(transcript[xpt - 1] == ocr[ypt - 1]) else 'X'
 
             mpt = mat_ptr[xpt][ypt]
             xpt -= 1
             ypt -= 1
 
+        # case if current cell is reachable horizontally
         elif mpt == 1:
-            tra_align += transcript[xpt]
+            tra_align += transcript[xpt - 1]
             ocr_align += '_'
+            added_text = transcript[xpt] + ' _'
+            print(mpt, xpt, ypt, added_text)
+
             align_record += ' '
             mpt = x_mat_ptr[xpt][ypt]
             xpt -= 1
 
+        # case if current cell is reachable vertically
         elif mpt == 2:
             tra_align += '_'
-            ocr_align += ocr[ypt]
+            ocr_align += ocr[ypt - 1]
+            added_text = '_ ' + ocr[ypt]
+            print(mpt, xpt, ypt, added_text)
+
             align_record += ' '
             mpt = y_mat_ptr[xpt][ypt]
             ypt -= 1
 
-        # print(mpt, xpt, ypt)
-
+    # reverse all records, since we obtained them by traversing the matrices from the bottom-right
     tra_align = tra_align[::-1]
     ocr_align = ocr_align[::-1]
     align_record = align_record[::-1]
+    pt_record = pt_record[::-1]
 
-    file = open('./results/' + item + '_result.txt','w+')
+    # log results
+    file = open('./results/' + item + '_result.txt', 'w+')
     file.seek(0)
     file.truncate()
     for n in range(int(np.ceil(len(tra_align) / line_len))):
@@ -131,19 +161,26 @@ def process(item):
         end = (n + 1) * line_len
         print(tra_align[start:end])
         print(ocr_align[start:end])
-        print(align_record[start:end] + '\n')
+        print(align_record[start:end])
+        # print(pt_record[start:end])
+        print('')
 
         file.write(tra_align[start:end] + '\n')
         file.write(ocr_align[start:end] + '\n')
         file.write(align_record[start:end] + '\n\n')
     file.close()
 
-    # plt.imshow(x_mat_ptr[1:200, 1:200])
+    # plt.subplot(1, 3, 1)
+    # plt.imshow(mat[1:200, 1:200])
+    # plt.subplot(1, 3, 2)
+    # plt.imshow(x_mat[1:200, 1:200])
+    # plt.subplot(1, 3, 3)
+    # plt.imshow(y_mat[1:200, 1:200])
     # plt.colorbar()
     # plt.show()
 
 
 if __name__ == '__main__':
-    #process('salzinnes_15')
+    # process('salzinnes_15')
     for f in files:
          process(f)
