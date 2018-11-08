@@ -18,10 +18,10 @@ mismatch = -4
 gap_open = -4
 gap_extend = -4
 
-gap_open_x = -10
-gap_extend_x = -10
-gap_open_y = -5
-gap_extend_y = -1
+gap_open_x = -4
+gap_extend_x = -4
+gap_open_y = -4
+gap_extend_y = -4
 
 # display length
 line_len = 90
@@ -38,7 +38,7 @@ def process(item):
     transcript = read_file('./txt/' + item + '_transcript.txt')
     ocr = read_file('./txt/' + item + '_ocr.txt')
 
-    # transcript = 'dasd'
+    # transcript = 'dafsad'
     # ocr = 'dfasd'
 
     # y_mat and x_mat keep track of gaps in horizontal and vertical directions
@@ -86,8 +86,8 @@ def process(item):
     # asymetric indel?
 
     # TRACEBACK
-    # current matrix we're in tells us which direction to head back (diagonally, y, or x)
-    # value of pointer matrix tells us which matrix to go to (mat, y_mat, or x_mat)
+    # which matrix we're in tells us which direction to head back (diagonally, y, or x)
+    # value of that matrix tells us which matrix to go to (mat, y_mat, or x_mat)
     # mat of 0 = match, 1 = x gap, 2 = y gap
     #
     # first
@@ -99,12 +99,6 @@ def process(item):
     ypt = len(ocr) - 1
     mpt = mat_ptr[xpt][ypt]
     prev_pt = -1
-
-    # these two lines correct an off-by-one error somewhere in my code. i can't find it.
-    # honestly, i'm absolutely furious that this works, but i've spent too much time chasing
-    # down the original bug already. the * is a dummy character.
-    # transcript = '*' + transcript
-    # ocr = '*' + ocr
 
     # start at bottom-right corner and work way up to top-left
     while(xpt >= 0 and ypt >= 0):
@@ -118,6 +112,7 @@ def process(item):
             added_text = transcript[xpt] + ' ' + ocr[ypt]
             print(mpt, xpt, ypt, added_text)
 
+            # determine if this diagonal step was a match or a mismatch
             align_record += 'O' if(transcript[xpt - 1] == ocr[ypt - 1]) else 'X'
 
             mpt = mat_ptr[xpt][ypt]
@@ -179,8 +174,10 @@ def process(item):
     # plt.colorbar()
     # plt.show()
 
+    return(tra_align, ocr_align)
+
 
 if __name__ == '__main__':
-    # process('salzinnes_15')
-    for f in files:
-         process(f)
+    process('einsiedeln_001v')
+    # for f in files:
+    #      process(f)
